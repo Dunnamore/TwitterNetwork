@@ -1,32 +1,33 @@
-import time
-import tweepy
-import operator
 import json
-import numpy as np
-import secrets
+import operator
+import time
 from pathlib import Path
+import numpy as np
+import tweepy
+
+import secrets
+
 auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-done=False
-# public_tweets = api.home_timeline()
-# for tweet in public_tweets:
-#     print(tweet.text)
-def network():
+done = False
+
+
+def loadfiles():
     my_file = Path("accounts.json")
     if my_file.is_file():
         json1_file = open('accounts.json')
         json1_str = json1_file.read()
         accounts = json.loads(json1_str)
     else:
-        accounts = {}
+        accounts = dict()
 
     my_file = Path("friends.npy")
     if my_file.is_file():
         myFriends = np.load(open('friends.npy', 'rb'))
-        print(len(myFriends))
     else:
         myFriends = api.friends_ids()
+        # noinspection PyTypeChecker
         np.array(myFriends).dump(open('friends.npy', 'wb'))
     my_file = Path("checked.npy")
     if my_file.is_file():
@@ -34,44 +35,59 @@ def network():
         checkedFriends = np.ndarray.tolist(checkedFriends)
     else:
         checkedFriends = []
-    friendsThreshold = 1000
-    print (len(checkedFriends))
+    return accounts, myFriends, checkedFriends
+
+
+#@profile
+def run():
+    timeBefore = time.time()
+    accounts, myFriends, checkedFriends = loadfiles()
+    callsCount = 0
+    print("checked friends: ", len(checkedFriends), "remaining: ", (len(myFriends) - len(checkedFriends)))
     try:
         for followerID in myFriends:
             if followerID not in checkedFriends:
-                user = api.get_user(followerID)
-                print("your friend: " + user.screen_name)
-                if user.friends_count > friendsThreshold:
-                    print("the friend follows more than ", friendsThreshold, "people")
-                    checkedFriends.append(followerID)
-                    np.array(checkedFriends).dump(open('checked.npy', 'wb'))
-                    continue
-                else:
-                    checkedFriends.append(followerID)
-                    friendsOfFriend = api.friends_ids(followerID)
-                    for account in friendsOfFriend:
-                        user = api.get_user(account)
-                        name = user.screen_name
-                        if not name in accounts:
-                            accounts[name] = 1
-                        else:
-                            accounts[name] += 1
-                        print("\t" + name + " is followed by ", accounts[name])
+                print("API calls= ", callsCount)
+                # 15 is the threshold of calls every 15 minutes
+                if callsCount % 15 == 0:
+                    print("remaining friends: ", (len(myFriends) - len(checkedFriends)))
+                checkedFriends.append(followerID)
+                friendsOfFriend = api.friends_ids(followerID, count=2000)
+                callsCount += 1
+                print("your friend: ", followerID, " follows ", len(friendsOfFriend), " people")
+                for friendOfFriendID in friendsOfFriend:
+                    account = str(friendOfFriendID)
+                    if account in accounts:
+                        accounts[account] += 1
+                    else:
+                        accounts[account] = 1
+                    print("\t friendOfFriend ", account, " is followed by ",
+                          accounts[account], " friends")
             else:
-                print("the friend is already checked")
                 continue
+                # save the arrays
+            # noinspection PyTypeChecker
             np.array(checkedFriends).dump(open('checked.npy', 'wb'))
             with open('accounts.json', 'w') as fp:
                 json.dump(accounts, fp)
-    except:
-        pass
-    for name in accounts:
-        if accounts[name] < 10: del accounts[name]
-    sorted = sorted(accounts.items(), key=operator.itemgetter(1), reverse=True)
-    with open('accounts.json', 'w') as fp:
-        json.dump(sorted, fp)
-    print(sorted)
-    done=True
-while not done:
-    network()
+    except Exception as e:
+        print(str(e))
+    myID = api.get_user(secrets.username).id
+    filteredAccounts = {k: v for k, v in accounts.items() if v >= 10 and k != myID}
+    # dict of user names instead of IDs
+    addedUsernames = dict()
+    for account in filteredAccounts:
+        username = api.get_user(account).screen_name
+        addedUsernames[username] = filteredAccounts[account]
+    # sort by most mutual friends
+    sortedAccounts = sorted(addedUsernames.items(), key=operator.itemgetter(1), reverse=True)
+    with open('sortedAccounts.json', 'w') as fp:
+        json.dump(sortedAccounts, fp)
+    timeAfter = time.time() - timeBefore
+    print("total time taken: ", timeAfter / 60, " minutes")
+    return True
+
+
+while not run():
+    run()
     time.sleep(15)
