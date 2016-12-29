@@ -38,7 +38,7 @@ def loadfiles():
     return accounts, myFriends, checkedFriends
 
 
-#@profile
+# @profile
 def run():
     timeBefore = time.time()
     accounts, myFriends, checkedFriends = loadfiles()

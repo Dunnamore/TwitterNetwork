@@ -1,0 +1,7 @@
+secrets.py
+*.json
+*.npy
+*.idea
+*.pyc
+*.lprof
+/.idea
