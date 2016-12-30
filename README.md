@@ -14,5 +14,6 @@ Finds the Twitter accounts that are followed the most by your friends (the peopl
 4. Results will be in the accounts.json file.
 5. If you want them in a pretty HTML table, copy the sorterdAccounts.json file to the HTML floder, open the table.html file in a webserver and they should be there
 6. ..Profit?
+
 ## Contribution
 There are many optimizations to be made in the code, especially to lookup for usernames (should be done in bulk instead of a call per user) but I don't have the time for it.
