@@ -16,4 +16,4 @@ Finds the Twitter accounts that are followed the most by your friends (the peopl
 6. ..Profit?
 
 ## Contribution
-There are many optimizations to be made in the code, especially to lookup for usernames (should be done in bulk instead of a call per user) but I don't have the time for it.
+There are many optimizations to be made in the code, especially to lookup for usernames (should be done in bulk instead of a call per user) but I don't have the time for it. There's a big room for improvement, and you're welcome if you'd like to help.
