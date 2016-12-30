@@ -11,6 +11,7 @@ auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 done = False
+minimumFollowers = 8
 
 
 def loadfiles():
@@ -38,7 +39,6 @@ def loadfiles():
     return accounts, myFriends, checkedFriends
 
 
-# @profile
 def run():
     timeBefore = time.time()
     accounts, myFriends, checkedFriends = loadfiles()
@@ -72,17 +72,28 @@ def run():
                 json.dump(accounts, fp)
     except Exception as e:
         print(str(e))
-    myID = api.get_user(secrets.username).id
-    filteredAccounts = {k: v for k, v in accounts.items() if v >= 10 and k != myID}
+    print("filtering accounts gathered")
+    filteredAccounts = {k: v for k, v in accounts.items() if v >= minimumFollowers}
     # dict of user names instead of IDs
     addedUsernames = dict()
+    print("transforming IDs into usernames")
+    myUsername = secrets.username
     for account in filteredAccounts:
+        # this could be vastly improved by using the lookup method (takes 100 accounts per call) but I don't have the
+        # time
         username = api.get_user(account).screen_name
-        addedUsernames[username] = filteredAccounts[account]
+        print("ID: ", account, " Username: ", username)
+        if username == myUsername:
+            continue
+        else:
+            addedUsernames[username] = filteredAccounts[account]
     # sort by most mutual friends
+    print("sorting accounts")
     sortedAccounts = sorted(addedUsernames.items(), key=operator.itemgetter(1), reverse=True)
+    print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
         json.dump(sortedAccounts, fp)
+
     timeAfter = time.time() - timeBefore
     print("total time taken: ", timeAfter / 60, " minutes")
     return True

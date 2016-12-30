@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Table of accounts</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+        function populate() {
+            $.getJSON("sortedAccounts.json", function (json) {
+                for (var i = 0; i < json.length; i++) {
+                    var $row = $("<tr>")
+                    var account = json[i][0]
+                    $row.append("<td> <a href=https://twitter.com/" + account + ">" + account + "</a></td>")
+                    var friends = json[i][1]
+                    $row.append("<td>" + friends + "</td>")
+                    $row.append("</tr>")
+                    $('#loadedJSON').append($row)  // Incorrect selector
+                }
+            });
+
+        }
+
+    </script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body onload="populate()">
+<table class="table">
+    <thead class="thead-inverse">
+    <tr>
+        <th>Account</th>
+        <th>Mutual friendship</th>
+    </tr>
+    </thead>
+    <tbody id="loadedJSON">
+    </tbody>
+</table>
+</body>
+</html>
