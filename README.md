@@ -1,5 +1,5 @@
 # TwitterNetwork
-Finds the Twitter accounts that are followed the most by your friends (the people you follow)
+Finds the Twitter accounts that are followed the most by your friends (the people you follow). born out of frustration from Twitter's recommendation algorithm's inaccuracy.
 ## Usage
 1. Use [this](https://themepacific.com/how-to-generate-api-key-consumer-token-access-key-for-twitter-oauth/994/) link to generate the needed secret keys.
 2. Put the keys you obtained in a file called secrets.py file, along with your username, specifically:  
