@@ -11,7 +11,7 @@ auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 done = False
-minimumFollowers = 8
+minimumFollowers = 10
 
 
 def loadfiles():
@@ -23,13 +23,8 @@ def loadfiles():
     else:
         accounts = dict()
 
-    my_file = Path("friends.npy")
-    if my_file.is_file():
-        myFriends = np.load(open('friends.npy', 'rb'))
-    else:
-        myFriends = api.friends_ids()
-        # noinspection PyTypeChecker
-        np.array(myFriends).dump(open('friends.npy', 'wb'))
+    myFriends = api.friends_ids()
+
     my_file = Path("checked.npy")
     if my_file.is_file():
         checkedFriends = np.load(open('checked.npy', 'rb'))
@@ -73,7 +68,7 @@ def run():
     except Exception as e:
         print(str(e))
     print("filtering accounts gathered")
-    filteredAccounts = {k: v for k, v in accounts.items() if v >= minimumFollowers}
+    filteredAccounts = {k: v for k, v in accounts.items() if v >= minimumFollowers and int(k) not in myFriends}
     # dict of user names instead of IDs
     addedUsernames = dict()
     print("transforming IDs into usernames")
