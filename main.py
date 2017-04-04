@@ -1,5 +1,4 @@
 import json
-import operator
 import time
 from pathlib import Path
 import numpy as np
@@ -10,9 +9,9 @@ import secrets
 auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-done = False
+list_size=500
+list_name="coding"
 minimumFollowers = 10
-
 
 def loadfiles():
     my_file = Path("accounts.json")
@@ -22,8 +21,10 @@ def loadfiles():
         accounts = json.loads(json1_str)
     else:
         accounts = dict()
-
     myFriends = api.friends_ids()
+    # list = api.list_members("mohamed3on", list_name, count=list_size)
+    # for row in list:
+    #     myFriends.append(row.id)
 
     my_file = Path("checked.npy")
     if my_file.is_file():
@@ -67,30 +68,53 @@ def run():
                 json.dump(accounts, fp)
     except Exception as e:
         print(str(e))
+    saveaccounts(accounts, myFriends)
+    timeAfter = time.time() - timeBefore
+    print("total time taken: ", timeAfter / 60, " minutes")
+    return True
+
+
+def saveaccounts(accounts, myFriends):
     print("filtering accounts gathered")
     filteredAccounts = {k: v for k, v in accounts.items() if v >= minimumFollowers and int(k) not in myFriends}
     # dict of user names instead of IDs
     addedUsernames = dict()
     print("transforming IDs into usernames")
     myUsername = secrets.username
+
     for account in filteredAccounts:
-        # this could be vastly improved by using the lookup method (takes 100 accounts per call) but I don't have the
-        # time
-        username = api.get_user(account).screen_name
-        print("ID: ", account, " Username: ", username)
-        if username == myUsername:
-            continue
-        else:
-            addedUsernames[username] = filteredAccounts[account]
-    # sort by most mutual friends
+            try:
+                # this could be vastly improved by using the lookup method (takes 100 accounts per call) but I don't have the
+                # time
+                user = api.get_user(account)
+                username = user.screen_name
+                bio = user.description
+                avatar = user.profile_image_url
+                followers = user.followers_count
+                name = user.name
+                following = user.friends_count
+                print("ID: ", account, " user: ", username)
+                if username == myUsername:
+                    continue
+                else:
+                    addedUsernames[username] = {}
+                    addedUsernames[username]['count'] = filteredAccounts[account]
+                    addedUsernames[username]['bio'] = bio
+                    addedUsernames[username]['avatar'] = avatar
+                    addedUsernames[username]['followers'] = followers
+                    addedUsernames[username]['name'] = name
+                    addedUsernames[username]['following'] = following
+            except Exception as e:
+             print(str(e))
+             continue
+            # sort by most mutual friends
     print("sorting accounts")
-    sortedAccounts = sorted(addedUsernames.items(), key=operator.itemgetter(1), reverse=True)
+    with open('addedusernames.json', 'w') as fp:
+        json.dump(addedUsernames, fp)
+    sortedAccounts = sorted(addedUsernames.items(), key=lambda x: x[1]['count'], reverse=True)
     print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
         json.dump(sortedAccounts, fp)
-
-    timeAfter = time.time() - timeBefore
-    print("total time taken: ", timeAfter / 60, " minutes")
     return True
 
 
