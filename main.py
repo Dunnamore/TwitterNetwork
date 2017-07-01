@@ -1,6 +1,7 @@
 import json
 import time
 from pathlib import Path
+
 import numpy as np
 import tweepy
 
@@ -98,6 +99,7 @@ def saveaccounts(accounts, myFriends):
                     continue
                 else:
                     addedUsernames[username] = {}
+                    addedUsernames[username]['id'] = account
                     addedUsernames[username]['count'] = filteredAccounts[account]
                     addedUsernames[username]['bio'] = bio
                     addedUsernames[username]['avatar'] = avatar
@@ -109,8 +111,6 @@ def saveaccounts(accounts, myFriends):
              continue
             # sort by most mutual friends
     print("sorting accounts")
-    with open('addedusernames.json', 'w') as fp:
-        json.dump(addedUsernames, fp)
     sortedAccounts = sorted(addedUsernames.items(), key=lambda x: x[1]['count'], reverse=True)
     print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
