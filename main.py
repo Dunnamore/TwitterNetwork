@@ -12,7 +12,7 @@ auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 list_size = 500
 list_name = "coding"
-minimumFollowers = 20
+minimumFollowers = 30
 
 
 def loadfiles():
@@ -110,9 +110,10 @@ def saveaccounts(accounts, myFriends):
         except Exception as e:
             print(str(e))
             continue
-            # sort by most mutual friends
+    #save just in case
     with open('addedUsernames.json', 'w') as fp:
-        json.dump(addedUsernames, fp)
+        json.dump(addedUsernames, fp)        
+            # sort by most mutual friends
     print("sorting accounts")
     sortedAccounts = sorted(addedUsernames.items(), key=lambda x: x[1]['count'], reverse=True)
     print("saving file..")

@@ -1,38 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Table of accounts</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="accounts.js"></script>
     <script>
         function populate() {
-            $.getJSON("sortedAccounts.json", function (json) {
-                for (var i = 0; i < json.length; i++) {
-                    var $row = $("<tr>")
-                    var account = json[i][0]
-                    $row.append("<td> <a href=https://twitter.com/" + account + ">" + account + "</a></td>")
-                    var friends = json[i][1]
-                    $row.append("<td>" + friends + "</td>")
-                    $row.append("</tr>")
-                    $('#loadedJSON').append($row)  // Incorrect selector
-                }
-            });
+
+
+            for (var i = 0; i < json.length; i++) {
+                var $row = $("<tr>")
+                $row.append("<td>" + (i + 1) + "</td")
+                var avatar = json[i][1]['avatar']
+                $row.append("<td class='col-md-1' > <img style='height: 48px; width:48px;' src=" + avatar + "></td>")
+                var account = json[i][0]
+                $row.append("<td> <a href=https://twitter.com/" + account + ">" + account + "</a></td>")
+                var name = json[i][1]['name']
+                $row.append("<td>" + name + "</td>")
+                var bio = json[i][1]['bio']
+                $row.append("<td>" + bio + "</td>")
+                var friends = json[i][1]['count']
+                $row.append("<td>" + friends + "</td>")
+                var followers = json[i][1]['followers']
+                $row.append("<td>" + followers + "</td>")
+                $row.append("</tr>")
+                $('#loadedJSON').append($row)
+            }
+
 
         }
-
     </script>
     <link href="css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body onload="populate()">
-<table class="table">
-    <thead class="thead-inverse">
-    <tr>
-        <th>Account</th>
-        <th>Mutual friendship</th>
-    </tr>
-    </thead>
-    <tbody id="loadedJSON">
-    </tbody>
-</table>
+    <table class="table">
+        <thead class="thead-inverse">
+            <tr>
+                <th>Rank</th>
+                <th>avatar</th>
+                <th>Screen Name</th>
+                <th>Name</th>
+                <th>Bio</th>
+                <th>Mutual Friends</th>
+                <th>Followers</th>
+
+            </tr>
+        </thead>
+        <tbody id="loadedJSON">
+        </tbody>
+    </table>
 </body>
+
 </html>
