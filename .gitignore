@@ -7,3 +7,4 @@ secrets.py
 /.idea
 /ignore
 test.py
+excludingtest\.py
