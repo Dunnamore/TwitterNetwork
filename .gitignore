@@ -8,3 +8,7 @@ secrets.py
 /ignore
 test.py
 excludingtest\.py
+
+*.log
+
+HTML/
