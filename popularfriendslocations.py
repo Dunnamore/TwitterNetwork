@@ -12,7 +12,7 @@ auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 myfriends = api.friends(count=200)
-thelist = api.list_members("mohamed3on", list_name, count=5000)
+code_list = api.list_members("mohamed3on", list_name, count=5000)
 locations = {}
 
 
@@ -37,7 +37,7 @@ def addlocations(thelist, locations):
     return locations
 
 
-locations = addlocations(thelist, locations)
+locations = addlocations(code_list, locations)
 locations = addlocations(myfriends, locations)
 
 locations = {k: v for k, v in locations.items() if v >= locations['Egypt']}
