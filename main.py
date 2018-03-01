@@ -1,7 +1,7 @@
 import json
 import time
 from pathlib import Path
-
+import os
 import numpy as np
 import tweepy
 
@@ -10,9 +10,7 @@ import secrets
 auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-list_size = 500
-list_name = "coding"
-minimumFollowers = 30
+minimumFollowers = 15
 
 
 def loadfiles():
@@ -24,9 +22,6 @@ def loadfiles():
     else:
         accounts = dict()
     myFriends = api.friends_ids()
-    # list = api.list_members("mohamed3on", list_name, count=list_size)
-    # for row in list:
-    #     myFriends.append(row.id)
 
     my_file = Path("checked.npy")
     if my_file.is_file():
@@ -41,18 +36,21 @@ def run():
     timeBefore = time.time()
     accounts, myFriends, checkedFriends = loadfiles()
     callsCount = 0
-    print("checked friends: ", len(checkedFriends), "remaining: ", (len(myFriends) - len(checkedFriends)))
+    print("checked friends: ", len(checkedFriends),
+          "remaining: ", (len(myFriends) - len(checkedFriends)))
     try:
         for followerID in myFriends:
             if followerID not in checkedFriends:
                 print("API calls= ", callsCount)
                 # 15 is the threshold of calls every 15 minutes
                 if callsCount % 15 == 0:
-                    print("remaining friends: ", (len(myFriends) - len(checkedFriends)))
+                    print("remaining friends: ",
+                          (len(myFriends) - len(checkedFriends)))
                 checkedFriends.append(followerID)
                 friendsOfFriend = api.friends_ids(followerID, count=2000)
                 callsCount += 1
-                print("your friend: ", followerID, " follows ", len(friendsOfFriend), " people")
+                print("your friend: ", followerID, " follows ",
+                      len(friendsOfFriend), " people")
                 for friendOfFriendID in friendsOfFriend:
                     account = str(friendOfFriendID)
                     if account in accounts:
@@ -78,7 +76,8 @@ def run():
 
 def saveaccounts(accounts, myFriends):
     print("filtering accounts gathered")
-    filteredAccounts = {k: v for k, v in accounts.items() if v >= minimumFollowers}
+    filteredAccounts = {k: v for k,
+                        v in accounts.items() if v >= minimumFollowers}
     # dict of user names instead of IDs
     addedUsernames = dict()
     print("transforming IDs into usernames")
@@ -110,22 +109,17 @@ def saveaccounts(accounts, myFriends):
         except Exception as e:
             print(str(e))
             continue
-    #save just in case
+    # save just in case
     with open('addedUsernames.json', 'w') as fp:
-        json.dump(addedUsernames, fp)        
-            # sort by most mutual friends
+        json.dump(addedUsernames, fp)
+        # sort by most mutual friends
     print("sorting accounts")
-    sortedAccounts = sorted(addedUsernames.items(), key=lambda x: x[1]['count'], reverse=True)
+    sortedAccounts = sorted(addedUsernames.items(),
+                            key=lambda x: x[1]['count'], reverse=True)
     print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
         json.dump(sortedAccounts, fp)
-
-    excludingFriends = {k: v for k, v in addedUsernames.items() if int(v['id']) not in myFriends}
-    print("sorting accounts excluding friends")
-    sortedExcluding = sorted(excludingFriends.items(), key=lambda x: x[1]['count'], reverse=True)
-    print("saving file..")
-    with open('sortedExcluding.json', 'w') as fp:
-        json.dump(sortedExcluding, fp)
+    os.remove('checked.npy')
     return True
 
 
