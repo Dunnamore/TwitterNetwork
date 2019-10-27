@@ -13,7 +13,18 @@ auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 myfriends = api.friends(count=200)
 code_list = api.list_members("mohamed3on", list_name, count=5000)
+
 locations = {}
+
+
+def remove_least_followed_N_from_list(list, n=100):
+    sorted_list = sorted(list, key=lambda x: x.followers_count)
+    print("list size:", len(sorted_list))
+    for user in sorted_list[:n]:
+        print(
+            f'removing user {user.name} and {user.followers_count} followers')
+        api.remove_list_member(
+            owner_screen_name='mohamed3on', slug=list_name, id=user.id)
 
 
 def addlocations(thelist, locations):
@@ -46,4 +57,5 @@ mostcommon = sorted(locations.items(),
 print(mostcommon)
 with open('commonlocations.json', 'w') as fp:
     json.dump(mostcommon, fp)
-os.system('commonlocations.json')
+os.system('code commonlocations.json')
+# remove_least_followed_N_from_list(code_list, 500)
