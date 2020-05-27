@@ -14,15 +14,13 @@ api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 myfriends = api.friends(count=200)
 code_list = api.list_members("mohamed3on", list_name, count=5000)
 
-locations = {}
-
 
 def remove_least_followed_N_from_list(list, n=100):
     sorted_list = sorted(list, key=lambda x: x.followers_count)
     print("list size:", len(sorted_list))
     for user in sorted_list[:n]:
         print(
-            f'removing user {user.name} and {user.followers_count} followers')
+            f'removing {user.name} (@{user.screen_name}) with {user.followers_count} followers')
         api.remove_list_member(
             owner_screen_name='mohamed3on', slug=list_name, id=user.id)
 
@@ -48,14 +46,20 @@ def addlocations(thelist, locations):
     return locations
 
 
-locations = addlocations(code_list, locations)
-locations = addlocations(myfriends, locations)
+def get_popular_friends_locations():
 
-locations = {k: v for k, v in locations.items() if v >= locations['Egypt']}
-mostcommon = sorted(locations.items(),
-                    key=operator.itemgetter(1), reverse=True)
-print(mostcommon)
-with open('commonlocations.json', 'w') as fp:
-    json.dump(mostcommon, fp)
-os.system('code commonlocations.json')
-# remove_least_followed_N_from_list(code_list, 500)
+    locations = {}
+    locations = addlocations(code_list, locations)
+    locations = addlocations(myfriends, locations)
+
+    locations = {k: v for k, v in locations.items() if v >= locations['Egypt']}
+    mostcommon = sorted(locations.items(),
+                        key=operator.itemgetter(1), reverse=True)
+
+    with open('./toplocations.json', 'w') as fp:
+        json.dump(mostcommon, fp)
+    os.system('code ./toplocations.json')
+
+
+remove_least_followed_N_from_list(code_list, 10)
+get_popular_friends_locations()

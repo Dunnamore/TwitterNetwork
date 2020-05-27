@@ -41,7 +41,7 @@ def run():
     try:
         for followerID in myFriends:
             if followerID not in checkedFriends:
-                print("API calls= ", callsCount)
+                print("API calls= ", callsCount+1   )
                 # 15 is the threshold of calls every 15 minutes
                 if callsCount % 15 == 0:
                     print("remaining friends: ",
