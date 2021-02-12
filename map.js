@@ -1,5 +1,3 @@
-const API_KEY = `AIzaSyBu9BR7BEYs6z8xuWnQQ1RurDpPKwugiLA`;
-
 const getCoordinates = async (places) => {
   let coordinates = [];
   for (entry of places) {
