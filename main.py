@@ -9,8 +9,8 @@ import secrets
 
 auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
-api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-minimumFollowers = 15
+api = tweepy.API(auth)
+minimumMutualFollowers = 15
 
 
 def loadfiles():
@@ -25,7 +25,7 @@ def loadfiles():
 
     my_file = Path("checked.npy")
     if my_file.is_file():
-        checkedFriends = np.load(open('checked.npy', 'rb'))
+        checkedFriends = np.load(open('checked.npy', 'rb'),allow_pickle=True)
         checkedFriends = np.ndarray.tolist(checkedFriends)
     else:
         checkedFriends = []
@@ -35,20 +35,29 @@ def loadfiles():
 def run():
     timeBefore = time.time()
     accounts, myFriends, checkedFriends = loadfiles()
-    callsCount = 0
     print("checked friends: ", len(checkedFriends),
           "remaining: ", (len(myFriends) - len(checkedFriends)))
     try:
+        mutes = api.mutes_ids()
         for followerID in myFriends:
-            if followerID not in checkedFriends:
-                print("API calls= ", callsCount+1   )
-                # 15 is the threshold of calls every 15 minutes
-                if callsCount % 15 == 0:
-                    print("remaining friends: ",
-                          (len(myFriends) - len(checkedFriends)))
+            if followerID not in checkedFriends and followerID not in mutes:
+                try:
+                    friendsOfFriend = api.friends_ids(followerID, count=2000)
+
+                except tweepy.TweepError:
+                    print('sleeping for 15 mins')
+                    # save the arrays
+                    np.array(checkedFriends).dump(open('checked.npy', 'wb'))
+                    print("checked accounts: ", len(checkedFriends),
+                    "remaining: ", (len(myFriends) - len(checkedFriends)))
+
+                    # wait for rate limit
+                    time.sleep(60 * 15)
+                    # try again
+                    friendsOfFriend = api.friends_ids(followerID, count=2000)
+
+
                 checkedFriends.append(followerID)
-                friendsOfFriend = api.friends_ids(followerID, count=2000)
-                callsCount += 1
                 print("your friend: ", followerID, " follows ",
                       len(friendsOfFriend), " people")
                 for friendOfFriendID in friendsOfFriend:
@@ -57,16 +66,14 @@ def run():
                         accounts[account] += 1
                     else:
                         accounts[account] = 1
-                    print("\t friendOfFriend ", account, " is followed by ",
-                          accounts[account], " friends")
             else:
                 continue
                 # save the arrays
-            # noinspection PyTypeChecker
             np.array(checkedFriends).dump(open('checked.npy', 'wb'))
             with open('accounts.json', 'w') as fp:
                 json.dump(accounts, fp)
     except Exception as e:
+        np.array(checkedFriends).dump(open('checked.npy', 'wb'))
         print(str(e))
     saveaccounts(accounts, myFriends)
     timeAfter = time.time() - timeBefore
@@ -77,7 +84,7 @@ def run():
 def saveaccounts(accounts, myFriends):
     print("filtering accounts gathered")
     filteredAccounts = {k: v for k,
-                        v in accounts.items() if v >= minimumFollowers}
+                        v in accounts.items() if v >= minimumMutualFollowers}
     # dict of user names instead of IDs
     addedUsernames = dict()
     print("transforming IDs into usernames")
@@ -109,16 +116,14 @@ def saveaccounts(accounts, myFriends):
         except Exception as e:
             print(str(e))
             continue
-    # save just in case
-    with open('addedUsernames.json', 'w') as fp:
-        json.dump(addedUsernames, fp)
         # sort by most mutual friends
-    print("sorting accounts")
+    print("sorting accounts...")
     sortedAccounts = sorted(addedUsernames.items(),
                             key=lambda x: x[1]['count'], reverse=True)
     print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
         json.dump(sortedAccounts, fp)
+    os.remove('accounts.json')
     os.remove('checked.npy')
     return True
 
