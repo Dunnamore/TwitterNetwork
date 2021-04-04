@@ -40,7 +40,7 @@ def addlocations(thelist, locations,mutes):
         location = member.location
         if location != '':
             fulllocation = "\'" + location + "\'"
-            all_locations = re.split(r', | \/ | & | \+ | and |\|', location)
+            all_locations = re.split(r', | \/ | \ | \\ | & | \+ | and |\|', location)
             if len(all_locations) > 1:
                 all_locations.append(fulllocation)
             for l in all_locations:
@@ -83,7 +83,7 @@ def get_popular_friends_locations():
 
 
 
-# remove_least_followed_N_from_list(5)
+remove_least_followed_N_from_list(5)
 
 
 get_popular_friends_locations()
