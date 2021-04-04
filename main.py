@@ -4,13 +4,15 @@ from pathlib import Path
 import os
 import numpy as np
 import tweepy
+import operator
+
 
 import secrets
 
 auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
 auth.set_access_token(secrets.access_token, secrets.access_token_secret)
 api = tweepy.API(auth)
-minimumMutualFollowers = 15
+minimumMutualFollowers = 5
 
 
 def loadfiles():
@@ -39,8 +41,9 @@ def run():
           "remaining: ", (len(myFriends) - len(checkedFriends)))
     try:
         mutes = api.mutes_ids()
+        myFriends = list(filter(lambda x: x not in mutes,myFriends))
         for followerID in myFriends:
-            if followerID not in checkedFriends and followerID not in mutes:
+            if followerID not in checkedFriends:
                 try:
                     friendsOfFriend = api.friends_ids(followerID, count=2000)
 
@@ -96,30 +99,19 @@ def saveaccounts(accounts, myFriends):
             # time
             user = api.get_user(account)
             username = user.screen_name
-            bio = user.description
-            avatar = user.profile_image_url
-            followers = user.followers_count
-            name = user.name
-            following = user.friends_count
             print("ID: ", account, " user: ", username)
             if username == myUsername:
                 continue
             else:
-                addedUsernames[username] = {}
-                addedUsernames[username]['id'] = account
-                addedUsernames[username]['count'] = filteredAccounts[account]
-                addedUsernames[username]['bio'] = bio
-                addedUsernames[username]['avatar'] = avatar
-                addedUsernames[username]['followers'] = followers
-                addedUsernames[username]['name'] = name
-                addedUsernames[username]['following'] = following
+                addedUsernames[username] = filteredAccounts[account]
+
         except Exception as e:
             print(str(e))
             continue
         # sort by most mutual friends
     print("sorting accounts...")
     sortedAccounts = sorted(addedUsernames.items(),
-                            key=lambda x: x[1]['count'], reverse=True)
+                            key=operator.itemgetter(1), reverse=True)
     print("saving file..")
     with open('sortedAccounts.json', 'w') as fp:
         json.dump(sortedAccounts, fp)
