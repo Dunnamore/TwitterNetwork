@@ -27,6 +27,8 @@ async function initMap() {
     center: new google.maps.LatLng(0, 0),
   });
 
+  let bounds = new google.maps.LatLngBounds();
+
   for (let entry of places) {
     const place = entry[0];
     const votes = entry[1];
@@ -38,9 +40,13 @@ async function initMap() {
       map: map,
     });
 
+    bounds.extend(co);
+
     let infowindow = new google.maps.InfoWindow({
       content: `<font color="green">${place}, ${votes}</font> `,
     });
     google.maps.event.addListener(marker, 'click', () => infowindow.open(map, marker));
   }
+
+  map.fitBounds(bounds);
 }
